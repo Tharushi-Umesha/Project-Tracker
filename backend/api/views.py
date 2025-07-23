@@ -11,11 +11,14 @@ def home(request):
 
 class ProjectViewset(viewsets.ViewSet):
     permission_classes = [permissions.AllowAny]
-    queryset = Project.objects.all()
     serializer_class = ProjectSerializer
 
+    def get_queryset(self):
+        """Return fresh queryset each time"""
+        return Project.objects.all()
+
     def list(self, request):
-        queryset = self.queryset
+        queryset = self.get_queryset()
         serializer = self.serializer_class(queryset, many = True)
         return Response(serializer.data)
         
@@ -24,7 +27,7 @@ class ProjectViewset(viewsets.ViewSet):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            return Response(serializer.data, status=201)
         else:
             return Response(serializer.errors, status= 400)
     # def create(self, request):
@@ -36,20 +39,29 @@ class ProjectViewset(viewsets.ViewSet):
     #         return Response(serializer.errors, status=400)
 
     def retrieve(self, request, pk=None):
-        project = self.queryset.get(pk=pk)
-        serializer = self.serializer_class(project)
-        return Response(serializer.data)
+        try:
+            project = self.get_queryset().get(pk=pk)
+            serializer = self.serializer_class(project)
+            return Response(serializer.data)
+        except Project.DoesNotExist:
+            return Response({'error': 'Project not found'}, status=404)
 
     def update(self, request, pk=None):
-        project = self.queryset.get(pk=pk)
-        serializer = self.serializer_class(project, data = request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        else:
-            return Response(serializer.errors, status= 400)
+        try:
+            project = self.get_queryset().get(pk=pk)
+            serializer = self.serializer_class(project, data = request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            else:
+                return Response(serializer.errors, status= 400)
+        except Project.DoesNotExist:
+            return Response({'error': 'Project not found'}, status=404)
 
     def destroy(self, request, pk=None):
-        project = self.queryset.get(pk=pk)
-        project.delete()
-        return Response(status=204)
+        try: 
+            project = self.get_queryset().get(pk=pk)
+            project.delete()
+            return Response(status=204)
+        except Project.DoesNotExist:
+            return Response({'error': 'Project not found'}, status=404)

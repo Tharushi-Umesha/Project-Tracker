@@ -1,4 +1,4 @@
-import React from 'react';
+import { React, useEffect, useState } from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import MyTextField from './forms/MyTextField';
 import Calendar from './forms/Calendar';
@@ -7,23 +7,45 @@ import DropDown from './forms/DropDown';
 import { useForm } from 'react-hook-form';
 import AxiosInstance from './Axios';
 import Dayjs from 'dayjs';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 
-const Create = () => {
+const Edit = () => {
+    const MyParam = useParams()
+    const MyId = MyParam.id
+    const [loading, setLoading] = useState(true);
+
+    const GetData = () => {
+        AxiosInstance.get(`project/${MyId}`).then((res) => {
+            console.log(res.data)
+            setValue('name', res.data.name)
+            setValue('status', res.data.status)
+            setValue('start_date', Dayjs(res.data.start_date))
+            setValue('end_date', Dayjs(res.data.end_date))
+            setValue('comments', res.data.comments)
+            setLoading(false)
+        }
+        )
+    }
+
+    useEffect(() => {
+        // console.log(MyId);
+        GetData();
+    }, [])
+
     const navigate = useNavigate()
     const defaultValues = {
         name: '',
         comments: '',
         status: '',
     };
-    const { handleSubmit, control } = useForm({ defaultValues: defaultValues })
+    const { handleSubmit, setValue, control } = useForm({ defaultValues: defaultValues })
 
     const submission = (data) => {
         const StartDate = Dayjs(data.start_date).format("YYYY-MM-DD");
         const EndDate = Dayjs(data.end_date).format("YYYY-MM-DD");
 
-        AxiosInstance.post(`project/`, {
+        AxiosInstance.put(`project/${MyId}/`, {
             name: data.name,
             start_date: StartDate,
             end_date: EndDate,
@@ -45,7 +67,7 @@ const Create = () => {
             <form onSubmit={handleSubmit(submission)}>
                 <Box sx={{ display: 'flex', width: '100%', backgroundColor: '#00003f', marginBottom: '10px' }}>
                     <Typography sx={{ margin: '20px', color: '#fff' }}>
-                        Create Records
+                        Edit Records
                     </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', width: '100%', boxShadow: 3, padding: 4, flexDirection: 'column' }}>
@@ -92,7 +114,7 @@ const Create = () => {
 
                         <Box sx={{ width: "30%" }}>
                             <Button variant='contained' type='submit' sx={{ width: '100%' }}>
-                                Submit
+                                Save Changes
                             </Button>
                         </Box>
                     </Box>
@@ -106,4 +128,4 @@ const Create = () => {
     )
 }
 
-export default Create;
+export default Edit;

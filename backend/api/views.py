@@ -9,6 +9,19 @@ from rest_framework.response import Response;
 def home(request):
     return HttpResponse("This is the home page.")
 
+class ProjectManagerViewset(viewsets.ViewSet):
+    permission_classes = [permissions.AllowAny]
+    serializer_class = ProjectManagerSerializer
+
+    def get_queryset(self):
+        """Return fresh queryset each time"""
+        return ProjectManager.objects.all()
+
+    def list(self, request):
+        queryset = self.get_queryset()
+        serializer = self.serializer_class(queryset, many = True)
+        return Response(serializer.data)
+
 class ProjectViewset(viewsets.ViewSet):
     permission_classes = [permissions.AllowAny]
     serializer_class = ProjectSerializer

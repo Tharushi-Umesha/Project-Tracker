@@ -26,6 +26,8 @@ export default function CommentBox(props) {
                     placeholder={placeholder}
                     onChange={onChange}
                     value={value}
+                    error={!!error}
+                    helperText={error?.message}
                 />
 
 
